@@ -1,0 +1,10 @@
+*.db
+*.json
+*.class
+*.pyc
+*~
+*.apk
+*.dex
+*.project
+*.settings/
+*.info
