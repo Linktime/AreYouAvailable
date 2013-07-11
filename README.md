@@ -3,6 +3,8 @@ TimeHelper
 
 TimeHelper
 
-# th_back is webservice
+# th_back 
+This is webservice
 
-# please submit your android app as a dir.
+# App dir
+This is Android App
