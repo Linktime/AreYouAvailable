@@ -1,12 +1,38 @@
 # Django settings for th_back project.
 import os
+import socket
+import os.path
+from os import environ
 
-DEBUG = True
+#DEBUG = True
+DEBUGNAME = "freedom-PC"
+DEBUG = socket.os.uname()[1] == DEBUGNAME
+
+debug = not environ.get("APP_NAME",)
+if debug:
+    ENGINE = 'django.db.backends.sqlite3'
+    MYSQL_DB = 'th_back.db'
+    MYSQL_USER = ''
+    MYSQL_PASS = ''
+    MYSQL_HOST_M = ''
+    MYSQL_HOST_S = ''
+    MYSQL_PORT = ''
+else :
+    import sae.const
+    ENGINE = 'django.db.backends.mysql'
+    MYSQL_DB = sae.const.MYSQL_DB
+    MYSQL_USER = sae.const.MYSQL_USER
+    MYSQL_PASS = sae.const.MYSQL_PASS
+    MYSQL_HOST_M = sae.const.MYSQL_HOST_M
+    MYSQL_HOST_S = sae.const.MYSQL_HOST_S
+    MYSQL_PORT = sae.const.MYSQL_PORT
+
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
     # ('Fan Yang', 'yfreedom.7@gmail.com'),
 )
+
 
 MANAGERS = ADMINS
 SITE_ROOT = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
@@ -14,12 +40,12 @@ SITE_NAME = 'localhost'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'th_back.db',                      # Or path to database file if using sqlite3.
-        'USER': '',                      # Not used with sqlite3.
-        'PASSWORD': '',                  # Not used with sqlite3.
-        'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
-        'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+        'ENGINE': ENGINE, # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
+        'NAME': MYSQL_DB,                      # Or path to database file if using sqlite3.
+        'USER': MYSQL_USER,                      # Not used with sqlite3.
+        'PASSWORD': MYSQL_PASS,                  # Not used with sqlite3.
+        'HOST': MYSQL_HOST_S,                      # Set to empty string for localhost. Not used with sqlite3.
+        'PORT': MYSQL_PORT,                      # Set to empty string for default. Not used with sqlite3.
     }
 }
 
@@ -96,6 +122,7 @@ MIDDLEWARE_CLASSES = (
     #'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+	#'debug_toolbar.middleware.DebugToolbarMiddleware', #debug_toolbar
     # Uncomment the next line for simple clickjacking protection:
     # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
@@ -109,6 +136,10 @@ TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
+    '/usr/local/sae/python/lib/python2.7/site-packages/django/contrib/admin/templates/admin',
+    os.path.join(os.path.dirname(__file__),'templates').replace('\\','/'),
+	os.path.join(SITE_ROOT, 'templates'),
+    'path/to/debug_toolbar/templates' ,
 )
 
 DEBUG_TOOLBAR_PANELS = (
@@ -123,6 +154,8 @@ DEBUG_TOOLBAR_PANELS = (
     'debug_toolbar.panels.logger.LoggingPanel',
 )
 
+INTERNAL_IPS = ("127.0.0.1",)
+
 INSTALLED_APPS = (
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -131,14 +164,18 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # Uncomment the next line to enable the admin:
-     'django.contrib.admin',
-	 'account',
-     'debug_toolbar',
-     'tastypie',
-     'south',
+    'django.contrib.admin',
+    #'django.contrib.admindocs',
+	'account',
+    'tastypie',
+    #'south',
+    # 'debug_toolbar',
     # Uncomment the next line to enable admin documentation:
-    # 'django.contrib.admindocs',
+    
 )
+DEBUG_TOOLBAR_CONFIG = {
+	'INTERCEPT_REDIRECTS':False,
+	}
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
