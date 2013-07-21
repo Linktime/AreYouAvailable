@@ -1,12 +1,15 @@
 from django.conf.urls import patterns, include, url
 from views import home
 from tastypie.api import Api
-from account.api import AccountResource,TimeDetailResource,UserResource
+from account.api import AccountResource,TimeDetailResource,UserResource,DateDetailResource,UserGroupResource,ShowMethod
 
-api = Api(api_name='v1')
+api = Api(api_name='data')
 api.register(AccountResource())
 api.register(TimeDetailResource())
-#api.register(UserResource())
+api.register(UserResource())
+api.register(UserGroupResource())
+api.register(DateDetailResource())
+api.register(ShowMethod())
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
@@ -14,8 +17,9 @@ admin.autodiscover()
 
 urlpatterns = patterns('',
 	url(r'^$',home),
-	url(r'^account/$',include('account.urls')),
+	url(r'^account/',include('account.urls')),
 	url(r'^api/',include(api.urls)),
+    url(r'^login/$','account.views.mobile_login'),
     # Examples:
     # url(r'^$', 'th_back.views.home', name='home'),
     # url(r'^th_back/', include('th_back.foo.urls')),
