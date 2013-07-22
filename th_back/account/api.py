@@ -65,14 +65,14 @@ class UserResource(ModelResource):
 class AccountResource(ModelResource):
     user = fields.ForeignKey(UserResource,'user',full=True)
     class Meta:
-        queryset = Account.objects.select_related().all()
+        queryset = Account.objects.select_related('user').all()
         resource_name = 'account'
         serializer = Serializer(formats=['json',])
         authentication = ApiKeyAuthentication()
         authorization = UserObjectsOnlyAuthorization()
 
 class TimeDetailResource(ModelResource):
-    accout = fields.ForeignKey(AccountResource,'user',full=True)
+    #account = fields.ForeignKey(AccountResource,'user')
     class Meta:
         queryset = TimeDetail.objects.select_related().all()
         resource_name = 'timedetail'
@@ -80,10 +80,11 @@ class TimeDetailResource(ModelResource):
         authentication = ApiKeyAuthentication()
         authorization = UserObjectsOnlyAuthorization()
     # def get_object_list(self, request):
-    #     return super(TimeDetailResource, self).get_object_list(request).filter(time=datetime.time(10,00))
+    #     account = Account.objects.get(request.user)
+    #     return super(TimeDetailResource, self).get_object_list(request).filter(user=account)
 
 class DateDetailResource(ModelResource):
-    accout = fields.ForeignKey(AccountResource,'user',full=True)
+    account = fields.ForeignKey(AccountResource,'user')
     class Meta:
         queryset = DateDetail.objects.select_related().all()
         resource_name = 'datedetail'
@@ -92,7 +93,7 @@ class DateDetailResource(ModelResource):
         authorization = UserObjectsOnlyAuthorization()
 
 class ShowMethodResource(ModelResource):
-    accout = fields.ForeignKey(AccountResource,'user',full=True)
+    account = fields.ForeignKey(AccountResource,'user')
     class Meta:
         queryset = ShowMethod.objects.select_related().all()
         resource_name = 'showmethod'
@@ -101,7 +102,8 @@ class ShowMethodResource(ModelResource):
         authorization = UserObjectsOnlyAuthorization()
 
 class UserGroupResource(ModelResource):
-    accout = fields.ForeignKey(AccountResource,'user',full=True)
+    member = fields.ManyToManyField(UserResource,'member')
+    account = fields.ForeignKey(AccountResource,'user')
     class Meta:
         queryset = UserGroup.objects.select_related().all()
         resource_name = 'usergroup'
