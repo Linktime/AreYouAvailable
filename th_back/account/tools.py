@@ -18,13 +18,13 @@ class TimeData(object):
         self.userlist.append(user)
 
     def clone(self):
-        td = TimeData(self.start_time,self.end_time,self.userlist,self.count)
+        td = TimeData(self.start_time,self.end_time,self.userlist[:],self.count)
         return td
 
     def __repr__(self):
         return '%s--%s %d'%(self.start_time,self.end_time,self.count)
     def __str__(self):
-        return '%s--%s'%(self.start_time,self.end_time)
+        return '%s-%s'%(self.start_time,self.end_time)
     def __eq__(self,obj):
         return self.start_time == obj.start_time and self.end_time == obj.end_time
 
@@ -79,9 +79,20 @@ def get_oneDay_freeTime_data(all_oneDays,user_oneDays,user):
             td = TimeData(user_oneDay.start_time,user_oneDay.end_time,[user,])
             new_all_oneDays.append(td)
         else:
-            if all_oneDay.start_time == user_oneDay.start_time and all_oneDay.end_time == user_oneDay.end_time:
-                index = new_all_oneDays.index(all_oneDay)
-                new_all_oneDays[index].add(user)
+            if all_oneDay.start_time == user_oneDay.start_time:
+                if all_oneDay.end_time == user_oneDay.end_time:
+                    index = new_all_oneDays.index(all_oneDay)
+                    new_all_oneDays[index].add(user)
+                elif all_oneDay.end_time < user_oneDay.end_time:
+                    tdmid = all_oneDay.clone()
+                    index = new_all_oneDays.index(tdmid)
+                    tdmid.add(user)
+                    new_all_oneDays[index] = tdmid
+                else :
+                    tdmid = all_oneDay.clone()
+                    tdmid.end_time = user_oneDay.end_time
+                    tdmid.add(user)
+                    new_all_oneDays.append(tdmid)
             elif all_oneDay.start_time < user_oneDay.start_time:
                 if all_oneDay.end_time <= user_oneDay.start_time:
                     user_oneDays.append(user_oneDay)
@@ -107,7 +118,7 @@ def get_oneDay_freeTime_data(all_oneDays,user_oneDays,user):
                     if user_oneDay.end_time < all_oneDay.end_time:
                         new_all_oneDays.append(TimeData(user_oneDay.start_time,user_oneDay.end_time,[user,]))
                         tdmid = all_oneDay.clone()
-                        tdmin.end_time=user_oneDay.end_time
+                        tdmid.end_time=user_oneDay.end_time
                         new_all_oneDays.append(tdmid)
 
                     else :
@@ -148,7 +159,7 @@ def get_Somebody_freeTime_Data(user,user_showmethod,memberlist):
 
 
 def get_userGroup_freeTime_Data(user,group_name):
-    user = Account.objects.get(user=user)    
+    #user = Account.objects.get(user=user)    
     try :
         user_group = UserGroup.objects.get(user=user,group_name=group_name)
         user_showmethod = user_group.showmethod

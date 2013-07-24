@@ -1,3 +1,4 @@
+# -*- coding:utf-8 -*-
 from tastypie.resources import ModelResource,ALL_WITH_RELATIONS,ALL
 from tastypie import fields
 from tastypie.serializers import Serializer
@@ -7,7 +8,7 @@ from django.db.models.signals import post_save
 from tastypie.models import create_api_key
 from tastypie.authentication import ApiKeyAuthentication
 from tastypie.authorization import Authorization,DjangoAuthorization
-
+from account.tools import get_userGroup_freeTime_Data
 
 import datetime
 
@@ -63,7 +64,7 @@ class UserResource(ModelResource):
         #always_return_data = True
 
 class AccountResource(ModelResource):
-    user = fields.ForeignKey(UserResource,'user',full=True)
+    user = fields.ForeignKey(UserResource,'user')
     class Meta:
         queryset = Account.objects.select_related('user').all()
         resource_name = 'account'
@@ -110,5 +111,30 @@ class UserGroupResource(ModelResource):
         serializer = Serializer(formats=['json',])
         authentication = ApiKeyAuthentication()
         authorization = UserObjectsOnlyAuthorization()
+
+class FreeTimeListResource(ModelResource):
+    user = fields.ForeignKey(UserResource,'user')
+    class Meta:
+        queryset = Account.objects.select_related('user').all()
+        resource_name = 'freetimelist/group'
+        serializer = Serializer(formats=['json',])
+        authentication = ApiKeyAuthentication()
+        authorization = UserObjectsOnlyAuthorization()
+        allowed_method = ['get',]
+    def dehydrate(self, bundle):
+        # Include the request IP in the bundle.
+        freelist = get_userGroup_freeTime_Data(bundle.request.user,bundle.request.GET['group_name'])
+        freelist_data=[]
+        i=0
+        for weekday in freelist:
+            i += 1
+            freelist_day = []
+            for timedetail in weekday:
+                count = timedetail.count
+                userlist = timedetail.userlist
+                freelist_day.append({'count':count,'userlist':userlist,'time':timedetail})
+            freelist_data.append({'weekday':i,'freelist_time':freelist_day})
+        bundle.data['freelist'] = freelist_data
+        return bundle
 
 post_save.connect(create_api_key, sender=User)

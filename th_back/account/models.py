@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 from django.db import models
 from django.contrib.auth.models import User
-
+from django.conf import settings
 
 # Create your models here.
 
@@ -48,6 +48,8 @@ class DateDetail(models.Model):
 class ShowMethod(models.Model):
 	user = models.ForeignKey(User,related_name='showmethod_user')
 	showmethod_name = models.CharField(max_length=50)
+	using_begin = models.DateField(default=settings.TODAY,blank=True)
+	using_end = models.DateField(default=settings.LAST_DAY,blank=True)
 	timedetail = models.ManyToManyField('TimeDetail',blank=True,related_name='showmethod_timedetail')
 	datedetail = models.ManyToManyField('DateDetail',blank=True,related_name='showmethod_datedetail')
 	def __unicode__(self):
