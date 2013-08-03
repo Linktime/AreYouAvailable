@@ -6,15 +6,17 @@ from os import environ
 import datetime
 import pytz
 
-#DEBUG = True
+DEBUG = True
 DEBUGNAME = "freedom-PC"
-DEBUG = socket.os.uname()[1] == DEBUGNAME
+#DEBUG = socket.os.uname()[1] == DEBUGNAME
 
 debug = not environ.get("APP_NAME",)
 if debug:
     ENGINE = 'django.db.backends.sqlite3'
+    #ENGINE = 'django.db.backends.mysql'
     MYSQL_DB = 'th_back.db'
-    MYSQL_USER = ''
+    #MYSQL_DB = 'th_back'
+    MYSQL_USER = 'root'
     MYSQL_PASS = ''
     MYSQL_HOST_M = ''
     MYSQL_HOST_S = ''

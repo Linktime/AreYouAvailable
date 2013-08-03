@@ -6,7 +6,7 @@ from account.api import AccountResource,TimeDetailResource,UserResource,DateDeta
 api = Api(api_name='data')
 api.register(AccountResource())
 api.register(TimeDetailResource())
-api.register(UserResource())
+#api.register(UserResource())
 api.register(UserGroupResource())
 api.register(DateDetailResource())
 api.register(ShowMethodResource())

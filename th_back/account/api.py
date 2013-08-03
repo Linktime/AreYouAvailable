@@ -27,7 +27,9 @@ class UserObjectsOnlyAuthorization(Authorization):
         return object_list
 
     def create_detail(self, object_list, bundle):
-        return bundle.obj.user == bundle.request.user
+        #return bundle.obj.user == bundle.request.user
+        #return bundle.request.user.is_anonymous == False
+        return True
 
     def update_list(self, object_list, bundle):
         allowed = []
@@ -44,20 +46,23 @@ class UserObjectsOnlyAuthorization(Authorization):
 
     def delete_list(self, object_list, bundle):
         # Sorry user, no deletes for you!
-        raise Unauthorized("Sorry, no deletes.")
+        #raise Unauthorized("Sorry, no deletes.")
+        return object_list.filter(user=bundle.request.user)
 
     def delete_detail(self, object_list, bundle):
-        raise Unauthorized("Sorry, no deletes.")
+        #raise Unauthorized("Sorry, no deletes.")
+        return bundle.obj.user == bundle.request.user
 
 class UserResource(ModelResource):
     class Meta:
         queryset = User.objects.select_related().all()
         resource_name = 'user'
         excludes = ['password','is_active','is_staff','is_superuser']
+        allowed_method = ['get','put',]
         serializer = Serializer(formats=['json',])
         authentication = ApiKeyAuthentication()
-        #authorization = UserObjectsOnlyAuthorization()
-        authorization = DjangoAuthorization()
+        authorization = UserObjectsOnlyAuthorization()
+        #authorization = DjangoAuthorization()
         filtering = {
             'username':ALL,
         }
@@ -73,44 +78,57 @@ class AccountResource(ModelResource):
         authorization = UserObjectsOnlyAuthorization()
 
 class TimeDetailResource(ModelResource):
-    #account = fields.ForeignKey(AccountResource,'user')
+    user = fields.ForeignKey(UserResource, 'user')
     class Meta:
         queryset = TimeDetail.objects.select_related().all()
         resource_name = 'timedetail'
         serializer = Serializer(formats=['json',])
         authentication = ApiKeyAuthentication()
         authorization = UserObjectsOnlyAuthorization()
+    def obj_create(self, bundle, **kwargs):
+        bundle.data['user'] = bundle.request.user
+        return super(TimeDetailResource,self).obj_create(bundle)
+
     # def get_object_list(self, request):
     #     account = Account.objects.get(request.user)
     #     return super(TimeDetailResource, self).get_object_list(request).filter(user=account)
 
 class DateDetailResource(ModelResource):
-    account = fields.ForeignKey(AccountResource,'user')
+    user = fields.ForeignKey(UserResource,'user')
     class Meta:
         queryset = DateDetail.objects.select_related().all()
         resource_name = 'datedetail'
         serializer = Serializer(formats=['json',])
         authentication = ApiKeyAuthentication()
         authorization = UserObjectsOnlyAuthorization()
+    def obj_create(self, bundle, **kwargs):
+        bundle.data['user'] = bundle.request.user
+        return super(TimeDetailResource,self).obj_create(bundle)
 
 class ShowMethodResource(ModelResource):
-    account = fields.ForeignKey(AccountResource,'user')
+    user = fields.ForeignKey(UserResource,'user')
     class Meta:
         queryset = ShowMethod.objects.select_related().all()
         resource_name = 'showmethod'
         serializer = Serializer(formats=['json',])
         authentication = ApiKeyAuthentication()
         authorization = UserObjectsOnlyAuthorization()
+    def obj_create(self, bundle, **kwargs):
+        bundle.data['user'] = bundle.request.user
+        return super(TimeDetailResource,self).obj_create(bundle)
 
 class UserGroupResource(ModelResource):
     member = fields.ManyToManyField(UserResource,'member')
-    account = fields.ForeignKey(AccountResource,'user')
+    user = fields.ForeignKey(UserResource,'user')
     class Meta:
         queryset = UserGroup.objects.select_related().all()
         resource_name = 'usergroup'
         serializer = Serializer(formats=['json',])
         authentication = ApiKeyAuthentication()
         authorization = UserObjectsOnlyAuthorization()
+    def obj_create(self, bundle, **kwargs):
+        bundle.data['user'] = bundle.request.user
+        return super(TimeDetailResource,self).obj_create(bundle)
 
 class FreeTimeListResource(ModelResource):
     user = fields.ForeignKey(UserResource,'user')
