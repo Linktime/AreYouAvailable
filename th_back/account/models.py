@@ -54,3 +54,24 @@ class ShowMethod(models.Model):
 	datedetail = models.ManyToManyField('DateDetail',blank=True,related_name='showmethod_datedetail')
 	def __unicode__(self):
 		return self.user.username
+
+class ActivityTime(models.Model):
+	user = models.ForeignKey(User,related_name="activitytime_user")
+	activity = models.ForeignKey('Activity')
+	start_date = models.DateField(blank=True,null=True)
+	end_date = models.DateField(blank=True,null=True)
+	start_time = models.TimeField()
+	end_time = models.TimeField()
+	def __unicode__(self):
+		return self.activity.name + ' ' + unicode(self.start_time) + '--' + unicode(self.end_time)
+
+class Activity(models.Model):
+	name = models.CharField(max_length=100)
+	user = models.ForeignKey(User,related_name="activity_user")
+	participant = models.ManyToManyField(User,related_name="activity_participant")
+	time = models.ManyToManyField(ActivityTime,related_name="activity_time",null=True,blank=True)
+	place = models.CharField(max_length=100,blank=True,null=True)
+	description = models.CharField(max_length=200,blank=True,null=True)
+
+	def __unicode__(self):
+		return self.name
