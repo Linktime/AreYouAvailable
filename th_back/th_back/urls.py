@@ -2,18 +2,19 @@ from django.conf.urls import patterns, include, url
 from views import home
 from tastypie.api import Api
 from account.api import AccountResource,TimeDetailResource,UserResource,DateDetailResource,UserGroupResource,ShowMethodResource,FreeTimeListResource
-from account.api import ActivityResource, ActivityTimeResource
+from account.api import ActivityResource, ActivityTimeResource, ActivityNotifyResource
 
 api = Api(api_name='data')
 api.register(AccountResource())
 api.register(TimeDetailResource())
-#api.register(UserResource())
+api.register(UserResource())
 api.register(UserGroupResource())
 api.register(DateDetailResource())
 api.register(ShowMethodResource())
 api.register(ActivityResource())
 api.register(ActivityTimeResource())
 api.register(FreeTimeListResource())
+api.register(ActivityNotifyResource())
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin

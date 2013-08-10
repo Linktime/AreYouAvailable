@@ -3,7 +3,7 @@ from tastypie.resources import ModelResource,ALL_WITH_RELATIONS,ALL
 from tastypie import fields
 from tastypie.serializers import Serializer
 from django.contrib.auth.models import User
-from account.models import Account,TimeDetail,DateDetail,ShowMethod,UserGroup,Activity,ActivityTime
+from account.models import Account,TimeDetail,DateDetail,ShowMethod,UserGroup,Activity,ActivityTime, ActivityNotify
 from django.db.models.signals import post_save
 from tastypie.models import create_api_key
 from tastypie.authentication import ApiKeyAuthentication
@@ -11,6 +11,11 @@ from tastypie.authorization import Authorization,DjangoAuthorization
 from account.tools import get_userGroup_freeTime_Data
 
 import datetime
+import sys
+
+from django.dispatch import Signal
+
+Activity_create_signal = Signal(providing_args=['activity_sender','member','activiyt'])
 
 
 class UserObjectsOnlyAuthorization(Authorization):
@@ -27,9 +32,7 @@ class UserObjectsOnlyAuthorization(Authorization):
         return object_list
 
     def create_detail(self, object_list, bundle):
-        #return bundle.obj.user == bundle.request.user
-        #return bundle.request.user.is_anonymous == False
-        return True
+        return bundle.obj.user == bundle.request.user
 
     def update_list(self, object_list, bundle):
         allowed = []
@@ -53,6 +56,48 @@ class UserObjectsOnlyAuthorization(Authorization):
         #raise Unauthorized("Sorry, no deletes.")
         return bundle.obj.user == bundle.request.user
 
+class NotifyAuthorization(Authorization):
+    def read_list(self, object_list, bundle):
+        # This assumes a ``QuerySet`` from ``ModelResource``.
+        return object_list.filter(sender=bundle.request.user)
+
+    def read_detail(self, object_list, bundle):
+        # Is the requested object owned by the user?
+        return bundle.obj.sender == bundle.request.user
+
+    def create_list(self, object_list, bundle):
+        # Assuming their auto-assigned to ``user``.
+        return object_list
+
+    def create_detail(self, object_list, bundle):
+        print '-----------------',bundle.obj.__dict__
+        #return bundle.obj.sender == bundle.request.user
+        return True
+
+
+    def update_list(self, object_list, bundle):
+        allowed = []
+
+        # Since they may not all be saved, iterate over them.
+        for obj in object_list:
+            if obj.sender == bundle.request.user:
+                allowed.append(obj)
+
+        return allowed
+
+    def update_detail(self, object_list, bundle):
+        return bundle.obj.sender == bundle.request.user or bundle.obj.member == bundle.request.user
+
+    def delete_list(self, object_list, bundle):
+        # Sorry user, no deletes for you!
+        #raise Unauthorized("Sorry, no deletes.")
+        return object_list.filter(sender=bundle.request.user)
+
+    def delete_detail(self, object_list, bundle):
+        #raise Unauthorized("Sorry, no deletes.")
+        return bundle.obj.sender == bundle.request.user
+
+
 class UserResource(ModelResource):
     class Meta:
         queryset = User.objects.select_related().all()
@@ -61,7 +106,7 @@ class UserResource(ModelResource):
         allowed_method = ['get','put',]
         serializer = Serializer(formats=['json',])
         authentication = ApiKeyAuthentication()
-        authorization = UserObjectsOnlyAuthorization()
+        #authorization = UserObjectsOnlyAuthorization()
         #authorization = DjangoAuthorization()
         filtering = {
             'username':ALL,
@@ -131,7 +176,7 @@ class UserGroupResource(ModelResource):
         return super(TimeDetailResource,self).obj_create(bundle)
 
 class ActivityResource(ModelResource):
-    participant = fields.ManyToManyField(UserResource,'participant')
+    participant = fields.ToManyField(UserResource,'participant',null=True)
     user = fields.ForeignKey(UserResource,'user')
     class Meta:
         queryset = Activity.objects.select_related().all()
@@ -141,7 +186,9 @@ class ActivityResource(ModelResource):
         authorization = UserObjectsOnlyAuthorization()
     def obj_create(self, bundle, **kwargs):
         bundle.data['user'] = bundle.request.user
-        return super(TimeDetailResource,self).obj_create(bundle)
+        #Activity_create_signal.send(sender=self.__class__,activity_sender=bundle.request.user,member=bundle.data['participant'])        
+        bundle.data['participant'] = None
+        return super(ActivityResource,self).obj_create(bundle)
 
 class ActivityTimeResource(ModelResource):
     user = fields.ForeignKey(UserResource,'user')
@@ -154,6 +201,19 @@ class ActivityTimeResource(ModelResource):
     def obj_create(self, bundle, **kwargs):
         bundle.data['user'] = bundle.request.user
         return super(TimeDetailResource,self).obj_create(bundle)
+
+class ActivityNotifyResource(ModelResource):
+    sender = fields.ForeignKey(UserResource,'sender')
+    member = fields.ToManyField(UserResource,'member')
+    activity = fields.ForeignKey(ActivityResource,'activity')
+    class Meta:
+        queryset = ActivityNotify.objects.select_related().all()
+        resource_name = "activitynotify"
+        serializer = Serializer(formats=['json',])
+        authentication = ApiKeyAuthentication()
+        authorization = NotifyAuthorization()
+        allowed_method = ['post','put',]
+
 
 class FreeTimeListResource(ModelResource):
     user = fields.ForeignKey(UserResource,'user')

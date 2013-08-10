@@ -1,5 +1,5 @@
 from django.contrib import admin
-from account.models import Account,TimeDetail,DateDetail,UserGroup,ShowMethod, ActivityTime, Activity
+from account.models import Account,TimeDetail,DateDetail,UserGroup,ShowMethod, ActivityTime, Activity, ActivityNotify
 
 from tastypie.admin import ApiKeyInline
 #from tastypie.models import ApiAccess, ApiKey
@@ -13,6 +13,7 @@ admin.site.register(UserGroup)
 admin.site.register(ShowMethod)
 admin.site.register(ActivityTime)
 admin.site.register(Activity)
+admin.site.register(ActivityNotify)
 
 #admin.site.register(ApiKey)
 #admin.site.register(ApiAccess)
