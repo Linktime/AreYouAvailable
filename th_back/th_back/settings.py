@@ -7,7 +7,7 @@ import datetime
 import pytz
 
 DEBUG = True
-DEBUGNAME = "freedom-PC"
+DEBUGNAME = "Freedom-PC"
 #DEBUG = socket.os.uname()[1] == DEBUGNAME
 
 debug = not environ.get("APP_NAME",)
@@ -27,7 +27,7 @@ else :
     MYSQL_DB = sae.const.MYSQL_DB
     MYSQL_USER = sae.const.MYSQL_USER
     MYSQL_PASS = sae.const.MYSQL_PASS
-    MYSQL_HOST_M = sae.const.MYSQL_HOST_M
+    MYSQL_HOST = sae.const.MYSQL_HOST
     MYSQL_HOST_S = sae.const.MYSQL_HOST_S
     MYSQL_PORT = sae.const.MYSQL_PORT
 
@@ -48,7 +48,7 @@ DATABASES = {
         'NAME': MYSQL_DB,                      # Or path to database file if using sqlite3.
         'USER': MYSQL_USER,                      # Not used with sqlite3.
         'PASSWORD': MYSQL_PASS,                  # Not used with sqlite3.
-        'HOST': MYSQL_HOST_S,                      # Set to empty string for localhost. Not used with sqlite3.
+        'HOST': MYSQL_HOST,                      # Set to empty string for localhost. Not used with sqlite3.
         'PORT': MYSQL_PORT,                      # Set to empty string for default. Not used with sqlite3.
     }
 }
