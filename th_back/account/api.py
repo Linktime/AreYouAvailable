@@ -8,7 +8,7 @@ from django.db.models.signals import post_save
 from tastypie.models import create_api_key
 from tastypie.authentication import ApiKeyAuthentication
 from tastypie.authorization import Authorization,DjangoAuthorization
-from account.tools import get_userGroup_freeTime_Data
+from account.tools import TimeData, get_userGroup_freeTime_Data, get_Somebody_freeTime_Data, timeToPerson, reGroupByWeek
 
 import datetime
 import sys
@@ -239,5 +239,75 @@ class FreeTimeListResource(ModelResource):
             freelist_data.append({'weekday':i,'freelist_time':freelist_day})
         bundle.data['freelist'] = freelist_data
         return bundle
+
+class FreeTimeListSingleResource(ModelResource):
+    user = fields.ForeignKey(UserResource,'user')
+    class Meta:
+        queryset = Account.objects.select_related('user').all()
+        resource_name = 'freetimelist/single'
+        serializer = Serializer(formats=['json',])
+        authentication = ApiKeyAuthentication()
+        authorization = UserObjectsOnlyAuthorization()
+        allowed_method = ['get',]
+    def dehydrate(self, bundle):
+        # Include the request IP in the bundle.
+        try :
+            person = User.objects.get(username=bundle.request.GET['person'])
+        except :
+            bundle.data['freelist'] = None
+            return bundle
+        freelist = get_Somebody_freeTime_Data(bundle.request.user,[person,])
+        freelist_data=[]
+        i=0
+        for weekday in freelist:
+            i += 1
+            freelist_day = []
+            for timedetail in weekday:
+                count = timedetail.count
+                userlist = timedetail.userlist
+                freelist_day.append({'count':count,'userlist':userlist,'time':timedetail})
+            freelist_data.append({'weekday':i,'freelist_time':freelist_day})
+        bundle.data['freelist'] = freelist_data
+        return bundle
+
+class TimeToPersonResource(ModelResource):
+    user = fields.ForeignKey(UserResource,'user')
+    class Meta:
+        queryset = Account.objects.select_related('user').all()
+        resource_name = 'freetimelist/tiemtoperson'
+        serializer = Serializer(formats=['json',])
+        authentication = ApiKeyAuthentication()
+        authorization = UserObjectsOnlyAuthorization()
+        allowed_method = ['get',]
+    def dehydrate(self, bundle):
+        #
+        user = bundle.request.user
+        times = bundle.request.GET['time'].split('-')
+        # try :
+        #     weekday = bundle.request.GET['weekday']
+        # except:
+        weekday = None
+        start_times = times[0].strip().split(':')
+        start_time = datetime.time(int(start_times[0]),int(start_times[1]))
+        end_times = times[1].strip().split(':')
+        end_time = datetime.time(int(end_times[0]),int(end_times[1]))
+        timedata = TimeData(start_time,end_time,[user,])
+        freelist = timeToPerson(timedata,weekday)
+        freelist_data=[]
+        if not weekday:
+            freelist = reGroupByWeek(freelist)
+            i = 0
+            for weekday in freelist:
+                i += 1
+                userlist = map(lambda x:x.user,weekday)
+                freelist_day = ({'count':len(weekday),'userlist':userlist,'time':weekday})
+                freelist_data.append({'weekday':i,'freelist_time':freelist_day})
+        else :
+            userlist = map(lambda x:x.user,freelist)
+            freelist_day = ({'count':len(freelist),'userlist':userlist,'time':freelist})
+            freelist_data.append({'weekday':weekday,'freelist_time':freelist_day})
+        bundle.data['freelist'] = freelist_data
+        return bundle
+
 
 post_save.connect(create_api_key, sender=User)

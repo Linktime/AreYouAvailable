@@ -37,16 +37,25 @@ def getGroupTimeDetails(user,group):
         time_user_list.append(group_time_list)
     return time_user_list
 
-def getFreeTimeUsers(timedata,group_time_list,weekday=None):
+def timeToPerson(timedata,weekday=None):
     #Get userlist between timedata.start_time and timedata.end_time
-    time_list = []
-    if weekday: 
-        group_time_list = filter(lambda x:x.weekday==weekday,group_time_list)
-    for item in group_time_list:
-        if timedata.start_time<=item.start_time<timedata.end_time \
-        or timedata.start_time<item.end_time<=timedata.end_time:
-            time_list.append(item)
-    return time_list
+    user = timedata.userlist[0]
+    groups = UserGroup.objects.filter(member=user)
+    group_time_list = []
+    for group in groups:
+        if weekday:
+            time_list = group.user.timedetail_user.filter(useto=user,free=True,weekday=weekday)
+        else :
+            time_list = group.user.timedetail_user.filter(useto=user,free=True)
+        group_time_list.append(time_list)
+    person_list = []
+    for member_list in group_time_list:
+        for item in member_list:
+            if timedata.start_time<=item.start_time<timedata.end_time \
+            or timedata.start_time<item.end_time<=timedata.end_time \
+            or (timedata.start_time>=item.start_time and timedata.end_time<=item.end_time) :
+                person_list.append(item)
+    return person_list
 
 def getSingleTimeDetails(user,member):    
     single_time_list = member.usergroup_user.filter(member=user,free=True)
