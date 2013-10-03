@@ -3,7 +3,7 @@ from tastypie.resources import ModelResource,ALL_WITH_RELATIONS,ALL
 from tastypie import fields
 from tastypie.serializers import Serializer
 from django.contrib.auth.models import User
-from account.models import Account,TimeDetail,DateDetail,ShowMethod,UserGroup,Activity,ActivityTime, ActivityNotify
+from account.models import Account,TimeDetail,DateDetail,UserGroup,Activity,ActivityTime, ActivityNotify
 from django.db.models.signals import post_save
 from tastypie.models import create_api_key
 from tastypie.authentication import ApiKeyAuthentication
@@ -150,17 +150,17 @@ class DateDetailResource(ModelResource):
         bundle.data['user'] = bundle.request.user
         return super(TimeDetailResource,self).obj_create(bundle)
 
-class ShowMethodResource(ModelResource):
-    user = fields.ForeignKey(UserResource,'user')
-    class Meta:
-        queryset = ShowMethod.objects.select_related().all()
-        resource_name = 'showmethod'
-        serializer = Serializer(formats=['json',])
-        authentication = ApiKeyAuthentication()
-        authorization = UserObjectsOnlyAuthorization()
-    def obj_create(self, bundle, **kwargs):
-        bundle.data['user'] = bundle.request.user
-        return super(TimeDetailResource,self).obj_create(bundle)
+# class ShowMethodResource(ModelResource):
+#     user = fields.ForeignKey(UserResource,'user')
+#     class Meta:
+#         queryset = ShowMethod.objects.select_related().all()
+#         resource_name = 'showmethod'
+#         serializer = Serializer(formats=['json',])
+#         authentication = ApiKeyAuthentication()
+#         authorization = UserObjectsOnlyAuthorization()
+#     def obj_create(self, bundle, **kwargs):
+#         bundle.data['user'] = bundle.request.user
+#         return super(TimeDetailResource,self).obj_create(bundle)
 
 class UserGroupResource(ModelResource):
     member = fields.ManyToManyField(UserResource,'member')

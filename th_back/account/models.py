@@ -20,7 +20,7 @@ class UserGroup(models.Model):
     group_name = models.CharField(max_length=50)
     user = models.ForeignKey(User,related_name='usergroup_user')
     member = models.ManyToManyField(User,related_name='usergroup_member')
-    showmethod = models.ForeignKey('ShowMethod',related_name='usergroup_showmethod')
+    #showmethod = models.ForeignKey('ShowMethod',related_name='usergroup_showmethod')
     def __unicode__(self):
         return self.user.username + ' ' + self.group_name
 
@@ -35,11 +35,32 @@ class TimeDetail(models.Model):
                                                         ('7','星期日')))
     start_time = models.TimeField()
     end_time = models.TimeField()
+    useto = models.ManyToManyField(User,related_name='timedetail_userto',null=True,blank=True)
+    useto_group = models.ManyToManyField(UserGroup,related_name='timedetail_userto_group',null=True,blank=True)
     level = models.IntegerField(default=3)
     free = models.BooleanField(default=False)
     def __unicode__(self):
         #return (self.user,u'%s'%self.time,self.weekday)
         return self.user.username+ ' ' +unicode(self.weekday) + ' ' + unicode(self.start_time) + '-' + unicode(self.end_time)
+
+    def add_group(self,group):
+        self.useto_group.add(group)
+        members = group.member.all()
+        for member in members:
+            #usetos = self.useto.all()
+            #if member not in usetos:
+            self.useto.add(member)
+        self.save()
+
+    def remove_group(self,group):
+        members = group.member.all()
+        try :
+            for member in members:
+                self.userto.remove(member)
+        except :
+            pass
+        self.useto_group.remove(group)
+        self.save()
 
 class DateDetail(models.Model):
     user = models.ForeignKey(User,related_name='datedetail_user')
@@ -49,15 +70,15 @@ class DateDetail(models.Model):
     def __unicode__(self):
         return self.user.username + unicode(self.start_date) + '-' + unicode(self.end_date)
 
-class ShowMethod(models.Model):
-    user = models.ForeignKey(User,related_name='showmethod_user')
-    showmethod_name = models.CharField(max_length=50)
-    using_begin = models.DateField(default=settings.TODAY,blank=True)
-    using_end = models.DateField(default=settings.LAST_DAY,blank=True)
-    timedetail = models.ManyToManyField('TimeDetail',blank=True,related_name='showmethod_timedetail')
-    datedetail = models.ManyToManyField('DateDetail',blank=True,related_name='showmethod_datedetail')
-    def __unicode__(self):
-        return self.user.username
+# class ShowMethod(models.Model):
+#     user = models.ForeignKey(User,related_name='showmethod_user')
+#     showmethod_name = models.CharField(max_length=50)
+#     using_begin = models.DateField(default=settings.TODAY,blank=True)
+#     using_end = models.DateField(default=settings.LAST_DAY,blank=True)
+#     timedetail = models.ManyToManyField('TimeDetail',blank=True,related_name='showmethod_timedetail')
+#     datedetail = models.ManyToManyField('DateDetail',blank=True,related_name='showmethod_datedetail')
+#     def __unicode__(self):
+#         return self.user.username
 
 class ActivityTime(models.Model):
     user = models.ForeignKey(User,related_name="activitytime_user")
