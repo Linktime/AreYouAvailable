@@ -65,15 +65,36 @@ def getSingleFreeTime(user,person):
     time_list = person.timedetail_user.filter(useto=user,free=True)
     return time_list
 
+def getMemberTimeList(user,member,group_tmp):
+    member_time_list = list(member.timedetail_user.filter(useto=user,free=True))
+    member_group = member.usergroup_user.filter(member=user)
+    for group in member_group:
+        #去重分组
+        if group in group_tmp:
+            continue
+        else :
+            group_tmp.append(group)
+        group_time_list = member.timedetail_user.filter(useto_group=group,free=True)
+        member_time_list.extend(group_time_list)
+    tmp = {}
+    #去重时间段
+    for time in member_time_list:
+        tmp[time.id] = time
+    member_time_list = tmp.values()
+    return member_time_list
+
 def reGroupByWeek(time_list):
-    user_weekday_1 = filter(lambda x:x.weekday==u'1',time_list)
-    user_weekday_2 = filter(lambda x:x.weekday==u'2',time_list)
-    user_weekday_3 = filter(lambda x:x.weekday==u'3',time_list)
-    user_weekday_4 = filter(lambda x:x.weekday==u'4',time_list)
-    user_weekday_5 = filter(lambda x:x.weekday==u'5',time_list)
-    user_weekday_6 = filter(lambda x:x.weekday==u'6',time_list)
-    user_weekday_7 = filter(lambda x:x.weekday==u'7',time_list)
-    user_weekday = [user_weekday_1,user_weekday_2,user_weekday_3,user_weekday_4,user_weekday_5,user_weekday_6,user_weekday_7]
+    user_weekday = []
+    for i in range(1,8):
+        user_weekday.append(filter(lambda x:x.weekday==str(i),time_list))
+    # user_weekday_1 = filter(lambda x:x.weekday==u'1',time_list)
+    # user_weekday_2 = filter(lambda x:x.weekday==u'2',time_list)
+    # user_weekday_3 = filter(lambda x:x.weekday==u'3',time_list)
+    # user_weekday_4 = filter(lambda x:x.weekday==u'4',time_list)
+    # user_weekday_5 = filter(lambda x:x.weekday==u'5',time_list)
+    # user_weekday_6 = filter(lambda x:x.weekday==u'6',time_list)
+    # user_weekday_7 = filter(lambda x:x.weekday==u'7',time_list)
+    # user_weekday = [user_weekday_1,user_weekday_2,user_weekday_3,user_weekday_4,user_weekday_5,user_weekday_6,user_weekday_7]
     return user_weekday
 
 def get_oneDay_freeTime_data(all_oneDays,user_oneDays,user):
@@ -164,8 +185,10 @@ def get_Somebody_freeTime_Data(user,memberlist):
         user_weekday_data = get_oneWeek_freeTime_Data(weekday_data,user_weekdays,user)
         
         new_weekday_data = user_weekday_data
+        group_tmp = []
         for member in memberlist:
-            member_time_list = member.timedetail_user.filter(useto=user,free=True)
+            member_time_list = getMemberTimeList(user,member,group_tmp)
+            # member_time_list = member.timedetail_user.filter(useto=user,free=True)
             member_weekdays = reGroupByWeek(member_time_list)
             new_weekday_data = get_oneWeek_freeTime_Data(new_weekday_data,member_weekdays,member)
         return new_weekday_data
@@ -183,10 +206,12 @@ def get_userGroup_freeTime_Data(user,group_name):
         user_weekday_data = get_oneWeek_freeTime_Data(weekday_data,user_weekdays,user)
         
         new_weekday_data = user_weekday_data
+        group_tmp = []
         for member in user_group.member.all():
-            member_time_list = member.timedetail_user.filter(useto=user,free=True)
+            member_time_list = getMemberTimeList(user,member,group_tmp)
             member_weekdays = reGroupByWeek(member_time_list)
             new_weekday_data = get_oneWeek_freeTime_Data(new_weekday_data,member_weekdays,member)
         return new_weekday_data
     except Account.DoesNotExist:
         pass
+

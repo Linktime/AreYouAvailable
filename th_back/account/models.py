@@ -43,24 +43,24 @@ class TimeDetail(models.Model):
         #return (self.user,u'%s'%self.time,self.weekday)
         return self.user.username+ ' ' +unicode(self.weekday) + ' ' + unicode(self.start_time) + '-' + unicode(self.end_time)
 
-    def add_group(self,group):
-        self.useto_group.add(group)
-        members = group.member.all()
-        for member in members:
-            #usetos = self.useto.all()
-            #if member not in usetos:
-            self.useto.add(member)
-        self.save()
+    # def add_group(self,group):
+    #     self.useto_group.add(group)
+    #     members = group.member.all()
+    #     for member in members:
+    #         #usetos = self.useto.all()
+    #         #if member not in usetos:
+    #         self.useto.add(member)
+    #     self.save()
 
-    def remove_group(self,group):
-        members = group.member.all()
-        try :
-            for member in members:
-                self.userto.remove(member)
-        except :
-            pass
-        self.useto_group.remove(group)
-        self.save()
+    # def remove_group(self,group):
+    #     members = group.member.all()
+    #     try :
+    #         for member in members:
+    #             self.userto.remove(member)
+    #     except :
+    #         pass
+    #     self.useto_group.remove(group)
+    #     self.save()
 
 class DateDetail(models.Model):
     user = models.ForeignKey(User,related_name='datedetail_user')
@@ -122,4 +122,13 @@ def accepted_activity(activity,member,**kwargs):
     activity.participant.add(member)
     activity.save()
 
+def create_default_group(sender,**kwargs):
+    if kwargs['created'] == True:
+        group = UserGroup()
+        user = kwargs['instance']
+        group.user = user
+        group.group_name = u"默认分组"
+        group.save()
+
+post_save.connect(create_default_group,sender=User)
 accepted_signal.connect(accepted_activity,sender=ActivityNotify)

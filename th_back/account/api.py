@@ -32,7 +32,8 @@ class UserObjectsOnlyAuthorization(Authorization):
         return object_list
 
     def create_detail(self, object_list, bundle):
-        return bundle.obj.user == bundle.request.user
+        #return bundle.obj.user == bundle.request.user
+        return True
 
     def update_list(self, object_list, bundle):
         allowed = []
@@ -102,7 +103,7 @@ class UserResource(ModelResource):
     class Meta:
         queryset = User.objects.select_related().all()
         resource_name = 'user'
-        excludes = ['password','is_active','is_staff','is_superuser']
+        excludes = ['password','is_active','is_staff','is_superuser','first_name','last_name']
         allowed_method = ['get','put',]
         serializer = Serializer(formats=['json',])
         authentication = ApiKeyAuthentication()
@@ -111,10 +112,29 @@ class UserResource(ModelResource):
         filtering = {
             'username':ALL,
         }
-        #always_return_data = True
+
+class SimpleUserResource(ModelResource):
+    class Meta:
+        queryset = User.objects.select_related().all()
+        resource_name = 'simpleuser'
+        fields = ['username']
+        filtering = {
+            'username':ALL
+        }
+        authentication = ApiKeyAuthentication()
+        allowed_method = ['get',]
+        serializer = Serializer(formats=['json',])  
+
+    # def obj_create(self,bundle,**kwargs):  
+    #     friend = bundle.data['friend']
+    #     # group = bundle.data['group']
+    #     user = bundle.request.user
+    #     print friend
+    #     print user
+    #     return bundle
 
 class AccountResource(ModelResource):
-    user = fields.ForeignKey(UserResource,'user')
+    user = fields.ForeignKey(UserResource,'user',full=True)
     class Meta:
         queryset = Account.objects.select_related('user').all()
         resource_name = 'account'
@@ -122,8 +142,23 @@ class AccountResource(ModelResource):
         authentication = ApiKeyAuthentication()
         authorization = UserObjectsOnlyAuthorization()
 
+class UserGroupResource(ModelResource):
+    member = fields.ManyToManyField(UserResource,'member',full=True)
+    user = fields.ForeignKey(UserResource,'user')
+    class Meta:
+        queryset = UserGroup.objects.select_related().all()
+        resource_name = 'usergroup'
+        serializer = Serializer(formats=['json',])
+        authentication = ApiKeyAuthentication()
+        authorization = UserObjectsOnlyAuthorization()
+    def obj_create(self, bundle, **kwargs):
+        bundle.data['user'] = bundle.request.user
+        return super(TimeDetailResource,self).obj_create(bundle)
+
 class TimeDetailResource(ModelResource):
     user = fields.ForeignKey(UserResource, 'user')
+    useto = fields.ToManyField(UserResource, 'useto',null=True)
+    useto_group = fields.ToManyField(UserGroupResource, 'useto_group',null=True)
     class Meta:
         queryset = TimeDetail.objects.select_related().all()
         resource_name = 'timedetail'
@@ -132,7 +167,14 @@ class TimeDetailResource(ModelResource):
         authorization = UserObjectsOnlyAuthorization()
     def obj_create(self, bundle, **kwargs):
         bundle.data['user'] = bundle.request.user
-        return super(TimeDetailResource,self).obj_create(bundle)
+        start_time = bundle.data['start_time'].strip().split(':')
+        end_time = bundle.data['end_time'].strip().split(':')
+        bundle.data['start_time'] = datetime.time(int(start_time[0]),int(start_time[1]))
+        bundle.data['end_time'] = datetime.time(int(end_time[0]),int(end_time[1]))
+        bundle =  super(TimeDetailResource,self).obj_create(bundle)
+        # TODO 
+        # Add group
+        return bundle
 
     # def get_object_list(self, request):
     #     account = Account.objects.get(request.user)
@@ -161,19 +203,6 @@ class DateDetailResource(ModelResource):
 #     def obj_create(self, bundle, **kwargs):
 #         bundle.data['user'] = bundle.request.user
 #         return super(TimeDetailResource,self).obj_create(bundle)
-
-class UserGroupResource(ModelResource):
-    member = fields.ManyToManyField(UserResource,'member')
-    user = fields.ForeignKey(UserResource,'user')
-    class Meta:
-        queryset = UserGroup.objects.select_related().all()
-        resource_name = 'usergroup'
-        serializer = Serializer(formats=['json',])
-        authentication = ApiKeyAuthentication()
-        authorization = UserObjectsOnlyAuthorization()
-    def obj_create(self, bundle, **kwargs):
-        bundle.data['user'] = bundle.request.user
-        return super(TimeDetailResource,self).obj_create(bundle)
 
 class ActivityResource(ModelResource):
     participant = fields.ToManyField(UserResource,'participant',null=True)
@@ -224,8 +253,7 @@ class FreeTimeListResource(ModelResource):
         authentication = ApiKeyAuthentication()
         authorization = UserObjectsOnlyAuthorization()
         allowed_method = ['get',]
-    def dehydrate(self, bundle):
-        # Include the request IP in the bundle.
+    def dehydrate(self, bundle):        
         freelist = get_userGroup_freeTime_Data(bundle.request.user,bundle.request.GET['group_name'])
         freelist_data=[]
         i=0
@@ -250,7 +278,6 @@ class FreeTimeListSingleResource(ModelResource):
         authorization = UserObjectsOnlyAuthorization()
         allowed_method = ['get',]
     def dehydrate(self, bundle):
-        # Include the request IP in the bundle.
         try :
             person = User.objects.get(username=bundle.request.GET['person'])
         except :
@@ -283,6 +310,7 @@ class TimeToPersonResource(ModelResource):
         #
         user = bundle.request.user
         times = bundle.request.GET['time'].split('-')
+        # FIXME
         # try :
         #     weekday = bundle.request.GET['weekday']
         # except:
