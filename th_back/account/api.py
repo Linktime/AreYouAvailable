@@ -122,7 +122,7 @@ class SimpleUserResource(ModelResource):
             'username':ALL
         }
         authentication = ApiKeyAuthentication()
-        allowed_method = ['get',]
+        allowed_method = ['get']
         serializer = Serializer(formats=['json',])  
 
     # def obj_create(self,bundle,**kwargs):  
@@ -130,7 +130,6 @@ class SimpleUserResource(ModelResource):
     #     # group = bundle.data['group']
     #     user = bundle.request.user
     #     print friend
-    #     print user
     #     return bundle
 
 class AccountResource(ModelResource):
@@ -157,7 +156,7 @@ class UserGroupResource(ModelResource):
 
 class TimeDetailResource(ModelResource):
     user = fields.ForeignKey(UserResource, 'user')
-    useto = fields.ToManyField(UserResource, 'useto',null=True)
+    useto = fields.ToManyField(UserResource, 'useto',null=True,full=True)
     useto_group = fields.ToManyField(UserGroupResource, 'useto_group',null=True)
     class Meta:
         queryset = TimeDetail.objects.select_related().all()
@@ -301,7 +300,7 @@ class TimeToPersonResource(ModelResource):
     user = fields.ForeignKey(UserResource,'user')
     class Meta:
         queryset = Account.objects.select_related('user').all()
-        resource_name = 'freetimelist/tiemtoperson'
+        resource_name = 'freetimelist/timetoperson'
         serializer = Serializer(formats=['json',])
         authentication = ApiKeyAuthentication()
         authorization = UserObjectsOnlyAuthorization()
@@ -309,7 +308,7 @@ class TimeToPersonResource(ModelResource):
     def dehydrate(self, bundle):
         #
         user = bundle.request.user
-        times = bundle.request.GET['time'].split('-')
+        times = bundle.request.GET['time'].split('~')
         # FIXME
         # try :
         #     weekday = bundle.request.GET['weekday']

@@ -35,6 +35,7 @@ class TimeDetail(models.Model):
                                                         ('7','星期日')))
     start_time = models.TimeField()
     end_time = models.TimeField()
+    description = models.CharField(max_length=50,null=True,blank=True)
     useto = models.ManyToManyField(User,related_name='timedetail_userto',null=True,blank=True)
     useto_group = models.ManyToManyField(UserGroup,related_name='timedetail_userto_group',null=True,blank=True)
     level = models.IntegerField(default=3)

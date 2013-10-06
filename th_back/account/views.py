@@ -83,3 +83,30 @@ def add_friend(request):
     else :
         return HttpResponseForbidden()
 
+@csrf_exempt
+def remove_friend(request):
+    if request.method == 'POST':
+        auth = request.GET
+        response = HttpResponse()
+        data = json.loads(request.raw_post_data)
+        response['register_status'] = 0
+        username = auth['username']
+        api_key = auth['api_key']
+        try :
+            user = User.objects.get(username=username)
+            ApiKey.objects.get(user=user,key=api_key)
+            try :
+                friend = User.objects.get(username=data['friend'])
+                group = UserGroup.objects.get(user=user,group_name=data['group'])
+                group.member.remove(friend)
+                group.save()
+            except User.DoesNotExist:
+                response['register_status'] = 2
+            except UserGroup.DoesNotExist:
+                response['register_status'] = 3
+        except User.DoesNotExist:
+            response['register_status'] = 1
+        return response
+    else :
+        return HttpResponseForbidden()
+
