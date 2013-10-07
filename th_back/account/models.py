@@ -63,6 +63,8 @@ class TimeDetail(models.Model):
     #     self.useto_group.remove(group)
     #     self.save()
 
+
+
 class DateDetail(models.Model):
     user = models.ForeignKey(User,related_name='datedetail_user')
     start_date = models.DateField()
