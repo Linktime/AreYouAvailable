@@ -6,7 +6,7 @@ from django.dispatch import Signal
 from django.db.models.signals import post_save
 
 accepted_signal = Signal(providing_args=['activity','member'])
-
+Activity_create_signal = Signal(providing_args=['activity_sender','member','activiyt'])
 # Create your models here.
 
 class Account(models.Model):
@@ -98,6 +98,15 @@ class Activity(models.Model):
     user = models.ForeignKey(User,related_name="activity_user")
     participant = models.ManyToManyField(User,related_name="activity_participant",blank=True,null=True)
     time = models.ManyToManyField(ActivityTime,related_name="activity_time",null=True,blank=True)
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    weekday = models.CharField(max_length=10,choices=(('1','星期一'),
+                                                        ('2','星期二'),
+                                                        ('3','星期三'),
+                                                        ('4','星期四'),
+                                                        ('5','星期五'),
+                                                        ('6','星期六'),
+                                                        ('7','星期日')))
     place = models.CharField(max_length=100,blank=True,null=True)
     description = models.CharField(max_length=200,blank=True,null=True)
 
@@ -132,6 +141,10 @@ def create_default_group(sender,**kwargs):
         group.user = user
         group.group_name = u"默认分组"
         group.save()
+
+def create_activitynotify(sender,**kwargs):
+    pass
+
 
 post_save.connect(create_default_group,sender=User)
 accepted_signal.connect(accepted_activity,sender=ActivityNotify)
