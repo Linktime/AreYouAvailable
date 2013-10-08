@@ -1,4 +1,7 @@
 # -*- coding:utf-8 -*-
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
 from tastypie.resources import ModelResource,ALL_WITH_RELATIONS,ALL
 from tastypie import fields
 from tastypie.serializers import Serializer
@@ -15,8 +18,6 @@ import datetime
 import sys
 
 from account.models import Activity_create_signal, create_activitynotify
-
-
 
 
 class UserObjectsOnlyAuthorization(Authorization):
@@ -212,10 +213,10 @@ class TimeDetailResource(ModelResource):
         authorization = UserObjectsOnlyAuthorization()
     def obj_create(self, bundle, **kwargs):
         bundle.data['user'] = bundle.request.user
-        start_time = bundle.data['start_time'].strip().split(':')
-        end_time = bundle.data['end_time'].strip().split(':')
-        bundle.data['start_time'] = datetime.time(int(start_time[0]),int(start_time[1]))
-        bundle.data['end_time'] = datetime.time(int(end_time[0]),int(end_time[1]))
+        # start_time = bundle.data['start_time'].strip().split(':')
+        # end_time = bundle.data['end_time'].strip().split(':')
+        # bundle.data['start_time'] = datetime.time(int(start_time[0]),int(start_time[1]))
+        # bundle.data['end_time'] = datetime.time(int(end_time[0]),int(end_time[1]))
         bundle =  super(TimeDetailResource,self).obj_create(bundle)
         # TODO 
         # Add group
@@ -259,8 +260,8 @@ class DateDetailResource(ModelResource):
 #         return super(TimeDetailResource,self).obj_create(bundle)
 
 class ActivityResource(ModelResource):
-    participant = fields.ToManyField(UserResource,'participant',null=True)
-    user = fields.ForeignKey(UserResource,'user')
+    participant = fields.ToManyField(SimpleUserResource,'participant',null=True,full=True)
+    user = fields.ForeignKey(SimpleUserResource,'user',full=True)
     class Meta:
         queryset = Activity.objects.select_related().all()
         resource_name = 'activity'

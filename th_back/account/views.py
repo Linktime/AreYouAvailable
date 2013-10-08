@@ -61,7 +61,9 @@ def add_friend(request):
     if request.method == 'POST':
         auth = request.GET
         response = HttpResponse()
-        data = json.loads(request.raw_post_data)
+        #data = json.loads(request.raw_post_data)
+        data = request.POST
+        print data
         response['register_status'] = 0
         username = auth['username']
         api_key = auth['api_key']
@@ -88,7 +90,8 @@ def remove_friend(request):
     if request.method == 'POST':
         auth = request.GET
         response = HttpResponse()
-        data = json.loads(request.raw_post_data)
+        #data = json.loads(request.raw_post_data)
+        data = request.POST
         response['register_status'] = 0
         username = auth['username']
         api_key = auth['api_key']
